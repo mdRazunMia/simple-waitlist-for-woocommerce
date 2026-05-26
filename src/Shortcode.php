@@ -1,4 +1,9 @@
 <?php
+/**
+ * Shortcode handler for the Simple Waitlist for WooCommerce plugin.
+ *
+ * @package SimpleWaitlist\WooCommerce
+ */
 
 declare(strict_types=1);
 

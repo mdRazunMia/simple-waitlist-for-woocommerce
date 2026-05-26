@@ -32,16 +32,16 @@ if ( file_exists( $autoloader ) ) {
 } else {
 	// Self-contained PSR-4 autoloader for environments without Composer.
 	spl_autoload_register(
-		static function ( string $class ): void {
+		static function ( string $fully_qualified_class ): void {
 			$prefix   = 'SimpleWaitlist\\WooCommerce\\';
 			$base_dir = __DIR__ . '/src/';
 
 			$len = strlen( $prefix );
-			if ( strncmp( $prefix, $class, $len ) !== 0 ) {
+			if ( strncmp( $prefix, $fully_qualified_class, $len ) !== 0 ) {
 				return;
 			}
 
-			$relative_class = substr( $class, $len );
+			$relative_class = substr( $fully_qualified_class, $len );
 			$file           = $base_dir . str_replace( '\\', '/', $relative_class ) . '.php';
 
 			if ( file_exists( $file ) ) {

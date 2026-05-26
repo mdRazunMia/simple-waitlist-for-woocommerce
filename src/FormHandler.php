@@ -53,6 +53,7 @@ class FormHandler {
 	 * @return void
 	 */
 	public function handle(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- Nonce verified below before processing data.
 		if ( ! isset( $_POST[ self::FIELD ] ) ) {
 			return;
 		}
@@ -103,11 +104,14 @@ class FormHandler {
 	 * @return array{email: string, name: string, product_id: int|null, variation_id: int|null}
 	 */
 	private function sanitize_form_data(): array {
-		return [
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified in handle() before this is called.
+		$data = [
 			'email'        => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
 			'name'         => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
 			'product_id'   => isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0,
 			'variation_id' => isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0,
 		];
+		// phpcs:enable
+		return $data;
 	}
 }

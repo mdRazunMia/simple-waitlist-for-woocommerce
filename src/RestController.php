@@ -96,7 +96,7 @@ class RestController {
 	 */
 	private function get_args_schema(): array {
 		return [
-			'email'        => [
+			'email'                 => [
 				'required'          => true,
 				'type'              => 'string',
 				'format'            => 'email',
@@ -105,7 +105,7 @@ class RestController {
 					return is_email( $value );
 				},
 			],
-			'name'         => [
+			'name'                  => [
 				'required'          => true,
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
@@ -113,19 +113,19 @@ class RestController {
 					return ! empty( trim( $value ) );
 				},
 			],
-			'product_id'   => [
+			'product_id'            => [
 				'required'          => false,
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
 			],
-			'variation_id' => [
+			'variation_id'          => [
 				'required'          => false,
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
 			],
 			'simple_waitlist_nonce' => [
-				'required'          => true,
-				'type'              => 'string',
+				'required' => true,
+				'type'     => 'string',
 			],
 		];
 	}

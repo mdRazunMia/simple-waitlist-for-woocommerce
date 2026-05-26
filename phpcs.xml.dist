@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<ruleset name="Simple Waitlist for WooCommerce">
+	<description>PHPCS rules for Simple Waitlist for WooCommerce</description>
+
+	<!-- Scan all PHP files in the plugin root and src/ directory. -->
+	<file>.</file>
+
+	<!-- Exclude vendor and other generated directories. -->
+	<exclude-pattern>vendor/</exclude-pattern>
+	<exclude-pattern>node_modules/</exclude-pattern>
+	<exclude-pattern>languages/</exclude-pattern>
+	<exclude-pattern>*.min.js</exclude-pattern>
+	<exclude-pattern>*.min.css</exclude-pattern>
+
+	<!-- Use the WordPress-Extra standard (WordPress + VIP opinions). -->
+	<rule ref="WordPress-Extra">
+		<!--
+			We allow these from WordPress-Extra:
+		-->
+
+		<!-- File names: The plugin uses PSR-4 class file naming (e.g., Database.php),
+		     which is standard for Composer-autoloaded classes. Both NotHyphenatedLowercase
+		     and InvalidClassFileName exclusions are needed for PSR-4 compatibility. -->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase" />
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName" />
+
+		<!-- Hook comments: The plugin wraps hook names in self:: or inline strings
+		     rather than using the full hook comment format. -->
+		<exclude name="WordPress.NamingConventions.ValidHookName.UseUnderscores" />
+
+		<!-- Strict comparisons: The plugin uses strict type declarations but may
+		     use loose comparisons where WP conventions expect it. -->
+		<exclude name="WordPress.PHP.StrictComparisons.LooseComparison" />
+
+		<!-- Short array syntax: The plugin uses modern PHP short arrays ([]),
+		     which is preferred for PHP 7.4+ codebases. The Universal standard
+		     (from phpcsextra) conflicts with Generic.Arrays.DisallowLongArraySyntax. -->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+	</rule>
+
+	<!-- Register custom capabilities used by the plugin. -->
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array">
+				<element value="manage_woocommerce" />
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Use the WordPress-Docs standard for inline documentation. -->
+	<rule ref="WordPress-Docs" />
+
+	<!-- Relax some sniff severity so the output is useful without being overwhelming. -->
+	<rule ref="WordPress-Extra">
+		<type>warning</type>
+	</rule>
+
+	<rule ref="WordPress-Docs">
+		<type>warning</type>
+	</rule>
+
+	<!-- Require that all files use strict typing declarations.
+	     Exclude entry-point files that interact with WordPress core
+	     and may receive mixed-type arguments. -->
+	<rule ref="Generic.PHP.RequireStrictTypes">
+		<exclude-pattern>simple-waitlist-for-woocommerce\.php</exclude-pattern>
+		<exclude-pattern>uninstall\.php</exclude-pattern>
+	</rule>
+
+	<!-- Require short array syntax ([] instead of array()). -->
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
+
+	<!-- Disallow PHP closing tags on files containing only PHP. -->
+	<rule ref="PSR2.Files.ClosingTag.NotAllowed">
+		<type>error</type>
+	</rule>
+
+	<!-- Require namespace declarations to be on a single line. -->
+	<rule ref="PSR2.Namespaces.NamespaceDeclaration" />
+
+	<!-- Allow nonce verification in the sanitize_form_data helper method
+	     since nonce is checked before it's called in handle(). -->
+	<rule ref="WordPress.Security.NonceVerification">
+		<properties>
+			<property name="customNonceVerificationFunctions" type="array">
+				<element value="sanitize_form_data" />
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Set the minimum PHP version for the ruleset. -->
+	<config name="testVersion" value="7.4-" />
+	<config name="minimum_supported_wp_version" value="5.8" />
+
+	<!-- Show report format with sniff codes. -->
+	<arg name="report" value="full" />
+	<arg value="sp" />
+
+	<!-- Show progress and sniff names. -->
+	<arg name="colors" />
+	<arg name="extensions" value="php" />
+	<arg name="warning-severity" value="5" />
+</ruleset>

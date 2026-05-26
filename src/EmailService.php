@@ -73,11 +73,11 @@ class EmailService {
 	 * @param string $email        Recipient email address.
 	 * @param string $name         Recipient name.
 	 * @param int    $product_id   Product ID.
-	 * @param int    $variation_id Variation ID (0 for simple products).
+	 * @param int    $variation_id Variation ID (0 for simple products). Kept for API consistency.
 	 *
 	 * @return bool Whether the email was sent successfully.
 	 */
-	public function send_notification( string $email, string $name, int $product_id, int $variation_id = 0 ): bool {
+	public function send_notification( string $email, string $name, int $product_id, int $variation_id = 0 ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
 		if ( empty( $email ) || empty( $name ) || empty( $product_id ) ) {
 			return false;
 		}

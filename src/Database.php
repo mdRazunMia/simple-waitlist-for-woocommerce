@@ -78,7 +78,7 @@ class Database implements DatabaseInterface {
 	 * @return void
 	 */
 	public function drop_table(): void {
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$this->wpdb->query( "DROP TABLE IF EXISTS {$this->table_name}" );
 	}
 
@@ -105,10 +105,10 @@ class Database implements DatabaseInterface {
 		return $this->wpdb->insert(
 			$this->table_name,
 			[
-				'email'         => $email,
-				'name'          => $name,
-				'product_id'    => $product_id,
-				'variation_id'  => $variation_id,
+				'email'        => $email,
+				'name'         => $name,
+				'product_id'   => $product_id,
+				'variation_id' => $variation_id,
 			],
 			[ '%s', '%s', '%d', '%d' ]
 		);
@@ -128,6 +128,7 @@ class Database implements DatabaseInterface {
 	 * @return bool True if a duplicate entry exists.
 	 */
 	public function has_duplicate( string $email, ?int $product_id = null, ?int $variation_id = null ): bool {
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$sql     = $this->wpdb->prepare( "SELECT COUNT(*) FROM {$this->table_name} WHERE email = %s", $email );
 		$clauses = [];
 
@@ -145,7 +146,7 @@ class Database implements DatabaseInterface {
 
 		$sql .= ' AND ' . implode( ' AND ', $clauses );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 		return (int) $this->wpdb->get_var( $sql ) > 0;
 	}
 
@@ -158,6 +159,7 @@ class Database implements DatabaseInterface {
 	 * @return array List of waitlist entry objects.
 	 */
 	public function get_unsent_entries( int $product_id, ?int $variation_id = null ): array {
+		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name cannot be parameterized.
 		$sql = $this->wpdb->prepare(
 			"SELECT * FROM {$this->table_name}
 			WHERE product_id = %d
@@ -166,8 +168,9 @@ class Database implements DatabaseInterface {
 			$product_id,
 			$variation_id
 		);
+		// phpcs:enable
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
 		return $this->wpdb->get_results( $sql );
 	}
 
