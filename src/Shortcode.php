@@ -45,14 +45,26 @@ class Shortcode {
 		);
 
 		$product_id   = intval( $atts['product_id'] );
-		$variation_id = intval( $atts['variation_id'] );
+		$variation_id = intval( $atts['variation_id'] ) > 0 ? intval( $atts['variation_id'] ) : null;
 
+		return $this->render_form( $product_id, $variation_id );
+	}
+
+	/**
+	 * Render the waitlist form for a specific product / variation.
+	 *
+	 * @param int      $product_id   Product ID.
+	 * @param int|null $variation_id Variation ID, or null for simple/grouped parents.
+	 *
+	 * @return string Rendered HTML.
+	 */
+	public function render_form( int $product_id, ?int $variation_id = null ): string {
 		ob_start();
 		?>
 		<form method="post" action="" class="simple-waitlist-form">
 			<?php wp_nonce_field( 'simple_waitlist_nonce_action', 'simple_waitlist_nonce' ); ?>
 			<input type="hidden" name="product_id" value="<?php echo esc_attr( $product_id ); ?>" />
-			<input type="hidden" name="variation_id" value="<?php echo esc_attr( $variation_id ); ?>" />
+			<input type="hidden" name="variation_id" value="<?php echo esc_attr( $variation_id ?? 0 ); ?>" />
 			<p>
 				<input
 					type="email"

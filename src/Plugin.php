@@ -68,6 +68,13 @@ class Plugin {
 	private FormHandler $form_handler;
 
 	/**
+	 * Product display instance.
+	 *
+	 * @var ProductDisplay
+	 */
+	private ProductDisplay $product_display;
+
+	/**
 	 * Plugin file path.
 	 *
 	 * @var string
@@ -99,6 +106,7 @@ class Plugin {
 		$this->rest_controller = new RestController( $this->database );
 		$this->notifier        = new Notifier( $this->database, $this->email_service );
 		$this->form_handler    = new FormHandler( $this->database );
+		$this->product_display = new ProductDisplay( $this->shortcode );
 	}
 
 	/**
@@ -112,6 +120,7 @@ class Plugin {
 		$this->rest_controller->register();
 		$this->notifier->register();
 		$this->form_handler->register();
+		$this->product_display->register();
 		$this->register_script();
 	}
 
