@@ -31,12 +31,21 @@ class ProductDisplay {
 	private Shortcode $shortcode;
 
 	/**
+	 * Database instance.
+	 *
+	 * @var DatabaseInterface
+	 */
+	private DatabaseInterface $database;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param Shortcode $shortcode Shortcode instance.
+	 * @param Shortcode         $shortcode Shortcode instance.
+	 * @param DatabaseInterface $database  Database instance.
 	 */
-	public function __construct( Shortcode $shortcode ) {
+	public function __construct( Shortcode $shortcode, DatabaseInterface $database ) {
 		$this->shortcode = $shortcode;
+		$this->database  = $database;
 	}
 
 	/**
@@ -45,7 +54,24 @@ class ProductDisplay {
 	 * @return void
 	 */
 	public function register(): void {
-		add_action( 'woocommerce_single_product_summary', [ $this, 'maybe_render_form' ], 35 );
+		$position = Settings::get_form_position();
+		$priority = 35;
+
+		switch ( $position ) {
+			case Settings::POSITION_BEFORE_CART:
+				add_action( 'woocommerce_before_add_to_cart_button', [ $this, 'maybe_render_form' ], $priority );
+				break;
+
+			case Settings::POSITION_AFTER_SUMMARY:
+				add_action( 'woocommerce_after_single_product_summary', [ $this, 'maybe_render_form' ], $priority );
+				break;
+
+			case Settings::POSITION_AFTER_CART:
+			default:
+				add_action( 'woocommerce_after_add_to_cart_button', [ $this, 'maybe_render_form' ], $priority );
+				break;
+		}
+
 		add_action( 'wp_footer', [ $this, 'variation_selection_script' ] );
 	}
 
@@ -59,12 +85,25 @@ class ProductDisplay {
 			return;
 		}
 
-		if ( ! apply_filters( 'simple_waitlist_auto_inject', true ) ) {
+		if ( ! apply_filters( 'simple_waitlist_auto_inject', Settings::is_auto_inject_enabled() ) ) {
 			return;
 		}
 
 		global $product;
 		if ( ! $product instanceof WC_Product ) {
+			return;
+		}
+
+		if ( get_post_meta( $product->get_id(), ProductMetaBox::META_KEY, true ) ) {
+			return;
+		}
+
+		if ( ! Settings::is_auto_inject_type_enabled( $product->get_type() ) ) {
+			return;
+		}
+
+		if ( $this->user_is_waitlisted( $product ) ) {
+			echo '<p class="simple-waitlist-message simple-waitlist-message--notice">' . esc_html__( 'You are already on the waitlist for this product.', 'simple-waitlist-for-woocommerce' ) . '</p>';
 			return;
 		}
 
@@ -84,7 +123,41 @@ class ProductDisplay {
 	}
 
 	/**
-	 * Render the form for a simple/external product when it is out of stock.
+	 * Check if the current logged-in user is already waitlisted for this product.
+	 *
+	 * @param WC_Product $product The product.
+	 *
+	 * @return bool
+	 */
+	private function user_is_waitlisted( WC_Product $product ): bool {
+		if ( ! is_user_logged_in() ) {
+			return false;
+		}
+
+		$user  = wp_get_current_user();
+		$email = sanitize_email( $user->user_email );
+
+		if ( ! is_email( $email ) ) {
+			return false;
+		}
+
+		if ( $product instanceof WC_Product_Variable ) {
+			return false; // Checked per-variation via JS; avoid hiding the whole form.
+		}
+
+		$product_id   = $product->get_id();
+		$variation_id = null;
+
+		if ( $product->get_type() === 'variation' ) {
+			$variation_id = $product->get_id();
+			$product_id   = $product->get_parent_id();
+		}
+
+		return $this->database->has_entry_for_email( $email, $product_id, $variation_id );
+	}
+
+	/**
+	 * Render the form for a simple product when it is out of stock.
 	 *
 	 * @param WC_Product $product The product.
 	 *

@@ -33,11 +33,32 @@ class Plugin {
 	private EmailService $email_service;
 
 	/**
-	 * Admin instance.
+	 * Admin settings instance.
 	 *
-	 * @var Admin
+	 * @var AdminSettings
 	 */
-	private Admin $admin;
+	private AdminSettings $admin_settings;
+
+	/**
+	 * Admin entries instance.
+	 *
+	 * @var AdminEntries
+	 */
+	private AdminEntries $admin_entries;
+
+	/**
+	 * Exporter instance.
+	 *
+	 * @var Exporter
+	 */
+	private Exporter $exporter;
+
+	/**
+	 * Product meta box instance.
+	 *
+	 * @var ProductMetaBox
+	 */
+	private ProductMetaBox $product_meta_box;
 
 	/**
 	 * Shortcode instance.
@@ -75,6 +96,13 @@ class Plugin {
 	private ProductDisplay $product_display;
 
 	/**
+	 * Block instance.
+	 *
+	 * @var Block
+	 */
+	private Block $block;
+
+	/**
 	 * Plugin file path.
 	 *
 	 * @var string
@@ -86,7 +114,7 @@ class Plugin {
 	 *
 	 * @var string
 	 */
-	private string $version = '1.0.0';
+	private string $version = '1.2.0';
 
 	/**
 	 * Constructor.
@@ -100,13 +128,20 @@ class Plugin {
 		$this->database      = new Database();
 		$this->email_service = new EmailService();
 
+		// Upgrade schema on plugin updates.
+		$this->database->maybe_upgrade();
+
 		// Create components with dependency injection.
-		$this->admin           = new Admin();
-		$this->shortcode       = new Shortcode();
-		$this->rest_controller = new RestController( $this->database );
-		$this->notifier        = new Notifier( $this->database, $this->email_service );
-		$this->form_handler    = new FormHandler( $this->database );
-		$this->product_display = new ProductDisplay( $this->shortcode );
+		$this->shortcode        = new Shortcode();
+		$this->rest_controller  = new RestController( $this->database );
+		$this->notifier         = new Notifier( $this->database, $this->email_service );
+		$this->form_handler     = new FormHandler( $this->database );
+		$this->product_display  = new ProductDisplay( $this->shortcode, $this->database );
+		$this->admin_settings   = new AdminSettings();
+		$this->exporter         = new Exporter( $this->database );
+		$this->admin_entries    = new AdminEntries( $this->database, $this->exporter );
+		$this->product_meta_box = new ProductMetaBox();
+		$this->block            = new Block( $this->shortcode );
 	}
 
 	/**
@@ -115,12 +150,15 @@ class Plugin {
 	 * @return void
 	 */
 	public function init(): void {
-		$this->admin->register();
+		$this->admin_settings->register();
+		$this->admin_entries->register();
+		$this->product_meta_box->register();
 		$this->shortcode->register();
 		$this->rest_controller->register();
 		$this->notifier->register();
 		$this->form_handler->register();
 		$this->product_display->register();
+		$this->block->register();
 		$this->register_script();
 	}
 

@@ -3,7 +3,7 @@
  * Plugin Name: Simple Waitlist for WooCommerce
  * Plugin URI:  https://wordpress.org/plugins/simple-waitlist-for-woocommerce
  * Description: A simple WooCommerce waitlist plugin that lets customers sign up for back-in-stock notifications.
- * Version:     1.0.0
+ * Version:     1.2.0
  * Author:      Your Name
  * Author URI:  https://your-website.com
  * License:     GPL-2.0-or-later

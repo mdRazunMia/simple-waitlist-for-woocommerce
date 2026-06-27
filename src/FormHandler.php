@@ -2,8 +2,7 @@
 /**
  * Form handler for the Simple Waitlist for WooCommerce plugin.
  *
- * Handles traditional (non-AJAX) form submissions from the waitlist shortcode,
- * extracted from the main Plugin class to adhere to Single Responsibility.
+ * Handles traditional (non-AJAX) form submissions from the waitlist shortcode.
  *
  * @package SimpleWaitlist\WooCommerce
  */
@@ -70,13 +69,18 @@ class FormHandler {
 			return;
 		}
 
+		if ( Settings::is_consent_required() && ! $data['consent'] ) {
+			wc_add_notice( __( 'Please agree to the consent terms to join the waitlist.', 'simple-waitlist-for-woocommerce' ), 'error' );
+			return;
+		}
+
 		// Check for duplicate before inserting.
 		if ( $this->database->has_duplicate( $data['email'], $data['product_id'], $data['variation_id'] ) ) {
 			wc_add_notice( __( 'You are already on the waitlist for this product!', 'simple-waitlist-for-woocommerce' ), 'notice' );
 			return;
 		}
 
-		$result = $this->database->insert_entry( $data['email'], $data['name'], $data['product_id'], $data['variation_id'] );
+		$result = $this->database->insert_entry( $data['email'], $data['name'], $data['product_id'], $data['variation_id'], $data['consent'] );
 
 		if ( false === $result ) {
 			wc_add_notice( __( 'Could not save your entry. Please try again.', 'simple-waitlist-for-woocommerce' ), 'error' );
@@ -88,9 +92,6 @@ class FormHandler {
 	/**
 	 * Verify the nonce from the form submission.
 	 *
-	 * Important: nonces must NOT be sanitized before verification,
-	 * as sanitization can alter the value and break the check.
-	 *
 	 * @return bool True if nonce is valid.
 	 */
 	private function verify_nonce(): bool {
@@ -101,15 +102,19 @@ class FormHandler {
 	/**
 	 * Sanitize and extract form data from $_POST.
 	 *
-	 * @return array{email: string, name: string, product_id: int|null, variation_id: int|null}
+	 * @return array{email: string, name: string, product_id: int|null, variation_id: int|null, consent: bool}
 	 */
 	private function sanitize_form_data(): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce is verified in handle() before this is called.
+		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+
 		$data = [
 			'email'        => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
 			'name'         => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
-			'product_id'   => isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0,
-			'variation_id' => isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0,
+			'product_id'   => $product_id > 0 ? $product_id : null,
+			'variation_id' => $variation_id > 0 ? $variation_id : null,
+			'consent'      => isset( $_POST['simple_waitlist_consent'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['simple_waitlist_consent'] ) ),
 		];
 		// phpcs:enable
 		return $data;

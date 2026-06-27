@@ -1,7 +1,7 @@
 {
     "name": "simple-waitlist/simple-waitlist-for-woocommerce",
     "description": "A simple WooCommerce waitlist plugin that lets customers sign up for back-in-stock notifications.",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
     "autoload": {

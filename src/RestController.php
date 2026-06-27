@@ -69,8 +69,6 @@ class RestController {
 	/**
 	 * Permission callback — verifies the nonce for CSRF protection.
 	 *
-	 * This is called before the main handler to reject unauthenticated requests early.
-	 *
 	 * @param WP_REST_Request $request The incoming request.
 	 *
 	 * @return bool|WP_Error True if nonce is valid, WP_Error otherwise.
@@ -96,7 +94,7 @@ class RestController {
 	 */
 	private function get_args_schema(): array {
 		return [
-			'email'                 => [
+			'email'                   => [
 				'required'          => true,
 				'type'              => 'string',
 				'format'            => 'email',
@@ -105,7 +103,7 @@ class RestController {
 					return is_email( $value );
 				},
 			],
-			'name'                  => [
+			'name'                    => [
 				'required'          => true,
 				'type'              => 'string',
 				'sanitize_callback' => 'sanitize_text_field',
@@ -113,17 +111,22 @@ class RestController {
 					return ! empty( trim( $value ) );
 				},
 			],
-			'product_id'            => [
+			'product_id'              => [
 				'required'          => false,
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
 			],
-			'variation_id'          => [
+			'variation_id'            => [
 				'required'          => false,
 				'type'              => 'integer',
 				'sanitize_callback' => 'absint',
 			],
-			'simple_waitlist_nonce' => [
+			'simple_waitlist_consent' => [
+				'required'          => false,
+				'type'              => 'integer',
+				'sanitize_callback' => 'absint',
+			],
+			'simple_waitlist_nonce'   => [
 				'required' => true,
 				'type'     => 'string',
 			],
@@ -142,12 +145,21 @@ class RestController {
 		$name         = $request->get_param( 'name' );
 		$product_id   = $request->get_param( 'product_id' );
 		$variation_id = $request->get_param( 'variation_id' );
+		$consent      = (bool) $request->get_param( 'simple_waitlist_consent' );
 
 		// Additional validation beyond schema validation.
 		if ( ! is_email( $email ) || empty( trim( $name ) ) ) {
 			return new WP_Error(
 				'rest_invalid_data',
 				__( 'Please provide a valid email and name.', 'simple-waitlist-for-woocommerce' ),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if ( Settings::is_consent_required() && ! $consent ) {
+			return new WP_Error(
+				'rest_consent_required',
+				__( 'Please agree to the consent terms to join the waitlist.', 'simple-waitlist-for-woocommerce' ),
 				[ 'status' => 400 ]
 			);
 		}
@@ -166,7 +178,7 @@ class RestController {
 			);
 		}
 
-		$result = $this->database->insert_entry( $sanitized_email, $sanitized_name, $sanitized_pid, $sanitized_vid );
+		$result = $this->database->insert_entry( $sanitized_email, $sanitized_name, $sanitized_pid, $sanitized_vid, $consent );
 
 		if ( false === $result ) {
 			return new WP_Error(

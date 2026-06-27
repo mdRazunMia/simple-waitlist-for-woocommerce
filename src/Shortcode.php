@@ -47,6 +47,10 @@ class Shortcode {
 		$product_id   = intval( $atts['product_id'] );
 		$variation_id = intval( $atts['variation_id'] ) > 0 ? intval( $atts['variation_id'] ) : null;
 
+		if ( $product_id > 0 && get_post_meta( $product_id, ProductMetaBox::META_KEY, true ) ) {
+			return '';
+		}
+
 		return $this->render_form( $product_id, $variation_id );
 	}
 
@@ -81,6 +85,14 @@ class Shortcode {
 					required
 				/>
 			</p>
+			<?php if ( Settings::is_consent_required() ) : ?>
+				<p>
+					<label>
+						<input type="checkbox" name="simple_waitlist_consent" value="1" required />
+						<?php echo esc_html( Settings::get_consent_label() ); ?>
+					</label>
+				</p>
+			<?php endif; ?>
 			<p>
 				<button type="submit" id="simple-waitlist-submit" class="button" name="simple_waitlist_submit">
 					<?php esc_html_e( 'Join Waitlist', 'simple-waitlist-for-woocommerce' ); ?>

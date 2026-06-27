@@ -1,9 +1,6 @@
 <?php
 /**
- * Database interface for the Simple Waitlist for WooCommerce plugin.
- *
- * Defines the contract for database operations so that consumers
- * depend on an abstraction rather than a concrete implementation.
+ * Database contract for the Simple Waitlist for WooCommerce plugin.
  *
  * @package SimpleWaitlist\WooCommerce
  */
@@ -12,6 +9,11 @@ declare(strict_types=1);
 
 namespace SimpleWaitlist\WooCommerce;
 
+/**
+ * Interface for waitlist database operations.
+ *
+ * @package SimpleWaitlist\WooCommerce
+ */
 interface DatabaseInterface {
 
 	/**
@@ -22,6 +24,13 @@ interface DatabaseInterface {
 	public function create_table(): void;
 
 	/**
+	 * Upgrade the table schema if needed.
+	 *
+	 * @return void
+	 */
+	public function maybe_upgrade(): void;
+
+	/**
 	 * Drop the waitlist table.
 	 *
 	 * @return void
@@ -29,7 +38,7 @@ interface DatabaseInterface {
 	public function drop_table(): void;
 
 	/**
-	 * Get the full table name with WordPress prefix.
+	 * Get the full table name.
 	 *
 	 * @return string
 	 */
@@ -42,38 +51,77 @@ interface DatabaseInterface {
 	 * @param string   $name         Subscriber name.
 	 * @param int|null $product_id   Product ID.
 	 * @param int|null $variation_id Variation ID.
+	 * @param bool     $consent      Whether consent was given.
 	 *
-	 * @return int|false The number of rows inserted, or false on error.
+	 * @return int|false Rows inserted, or false on error.
 	 */
-	public function insert_entry( string $email, string $name, ?int $product_id = null, ?int $variation_id = null );
+	public function insert_entry( string $email, string $name, ?int $product_id = null, ?int $variation_id = null, bool $consent = false );
 
 	/**
-	 * Check if a waitlist entry already exists for the given email and product.
+	 * Check if a duplicate entry exists.
 	 *
 	 * @param string   $email        Email address.
 	 * @param int|null $product_id   Product ID.
 	 * @param int|null $variation_id Variation ID.
 	 *
-	 * @return bool True if a duplicate entry exists.
+	 * @return bool
 	 */
 	public function has_duplicate( string $email, ?int $product_id = null, ?int $variation_id = null ): bool;
 
 	/**
-	 * Get unsent waitlist entries for a product.
+	 * Check if an entry exists for a given email and product/variation.
+	 *
+	 * @param string   $email        Email address.
+	 * @param int|null $product_id   Product ID.
+	 * @param int|null $variation_id Variation ID.
+	 *
+	 * @return bool
+	 */
+	public function has_entry_for_email( string $email, ?int $product_id = null, ?int $variation_id = null ): bool;
+
+	/**
+	 * Get unsent entries for a product/variation.
 	 *
 	 * @param int      $product_id   Product ID.
-	 * @param int|null $variation_id Variation ID (null for simple products).
+	 * @param int|null $variation_id Variation ID.
 	 *
-	 * @return array List of waitlist entry objects.
+	 * @return array
 	 */
 	public function get_unsent_entries( int $product_id, ?int $variation_id = null ): array;
 
 	/**
-	 * Mark a waitlist entry as notified.
+	 * Mark an entry as notified.
 	 *
 	 * @param int $entry_id Entry ID.
 	 *
-	 * @return int|false The number of rows updated, or false on error.
+	 * @return int|false
 	 */
 	public function mark_as_notified( int $entry_id );
+
+	/**
+	 * Get paginated entries for admin list table.
+	 *
+	 * @param array $args Query arguments.
+	 *
+	 * @return array
+	 */
+	public function get_entries( array $args = [] ): array;
+
+	/**
+	 * Count entries for pagination.
+	 *
+	 * @param array $args Filter arguments.
+	 *
+	 * @return int
+	 */
+	public function count_entries( array $args = [] ): int;
+
+	/**
+	 * Delete an entry by ID.
+	 *
+	 * @param int $entry_id Entry ID.
+	 *
+	 * @return int|false
+	 */
+	public function delete_entry( int $entry_id );
 }

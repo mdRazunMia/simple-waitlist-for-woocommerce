@@ -53,11 +53,30 @@
     }
   }
 
+  /**
+   * Determine whether a submit button should stay disabled after AJAX completes.
+   *
+   * Variable-product forms keep the button disabled until a variation is chosen.
+   *
+   * @param {jQuery} $form The form element.
+   *
+   * @return {boolean}
+   */
+  function shouldStayDisabled($form) {
+    if (!$form.closest(".simple-waitlist-variable-wrap").length) {
+      return false;
+    }
+
+    var variationId = $form.find('input[name="variation_id"]').val();
+    return !variationId;
+  }
+
   $(document).on("submit", ".simple-waitlist-form", function (e) {
     e.preventDefault();
 
     var $form = $(this);
     var $submitBtn = $form.find("#simple-waitlist-submit");
+    var $consent = $form.find('input[name="simple_waitlist_consent"]');
 
     // Disable button to prevent double submission.
     $submitBtn.prop("disabled", true);
@@ -69,6 +88,10 @@
       variation_id: $form.find('input[name="variation_id"]').val(),
       simple_waitlist_nonce: $form.find('input[name="simple_waitlist_nonce"]').val(),
     };
+
+    if ($consent.length) {
+      data.simple_waitlist_consent = $consent.is(":checked") ? 1 : 0;
+    }
 
     $.ajax({
       url: simpleWaitlist.ajaxUrl,
@@ -89,7 +112,9 @@
         showMessage($form, "error", message);
       },
       complete: function () {
-        $submitBtn.prop("disabled", false);
+        if (!shouldStayDisabled($form)) {
+          $submitBtn.prop("disabled", false);
+        }
       },
     });
   });

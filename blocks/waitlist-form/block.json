@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "simple-waitlist/form",
+  "version": "1.2.0",
+  "title": "Waitlist Form",
+  "category": "woocommerce",
+  "description": "Display the Simple Waitlist signup form for a product.",
+  "textdomain": "simple-waitlist-for-woocommerce",
+  "attributes": {
+    "productId": {
+      "type": "integer",
+      "default": 0
+    },
+    "variationId": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "usesContext": [ "postId" ],
+  "supports": {
+    "html": false,
+    "multiple": true
+  }
+}
